@@ -1,0 +1,14 @@
+{
+    "Bank": {
+      "BankTabs": {
+        "One": {
+          "Fish": "5",
+          "Pots": "2"
+        },
+        "Two": {
+          "Crystals": "50",
+          "Dust": "20"
+        }
+      }
+    }
+  }
