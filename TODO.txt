@@ -1,0 +1,8 @@
+for 23/05/23 - Tuesday:
+Learn how to use Json Nhloman
+- Get json items out of it into specific variables.
+- Then find out how to add colour to the things I'm sending to discord.
+- Then find a way to sanitize the values that are returned.
+-- I.E if items are below a certain threshold then they appear as red etc.
+
+-- Think about moving over to the wow addon part.

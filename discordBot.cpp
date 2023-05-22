@@ -2,15 +2,22 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include "json.hpp"
 
 int main() {
-    std::string item_name;
-    std::ifstream myfile("token.txt");
-    if(myfile.is_open()){
-        myfile >> item_name;
+    using json = nlohmann::json;
+    std::string botToken;
+    std::ifstream myBotToken("token.txt");
+    std::ifstream myJson("bank.json");
+    json bank_json = json::parse(myJson);
+    if(myBotToken.is_open()){
+        myBotToken >> botToken;
     }
 
-    const std::string BOT_TOKEN = item_name;
+    // Just testing to see how nlohmann works - TODO
+    std::cout << bank_json["Bank"]["BankTabs"]["One"].dump(1) << std::endl;
+
+    const std::string BOT_TOKEN = botToken;
     uint64_t intents = dpp::i_default_intents | dpp::i_message_content;
     dpp::cluster bot(BOT_TOKEN, intents);
 
@@ -25,7 +32,7 @@ int main() {
 	    bot.on_message_create([&bot](const dpp::message_create_t &event) {
         if (event.msg.content == "!file") {
             // create a message
-            dpp::message msg(event.msg.channel_id, "farts");
+            dpp::message msg(event.msg.channel_id, "uploading_image");
  
             // attach the image to the message
             msg.add_file("cheese.jpg", dpp::utility::read_file("/home/linuxdev/Documents/cheese.jpg"));
