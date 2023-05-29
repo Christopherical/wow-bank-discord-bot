@@ -1,0 +1,258 @@
+#define FMT_HEADER_ONLY
+#include "MyBot.h"
+#include <dpp/dpp.h>
+#include <fmt/core.h>
+#include <iostream>
+#include <json.hpp>
+#include <set>
+#include <typeinfo>
+#include <string>
+
+/* Be sure to place your token in the line below.
+ * Follow steps here to get a token:
+ * https://dpp.dev/creating-a-bot-application.html
+ * When you invite the bot, be sure to invite it with the 
+ * scopes 'bot' and 'applications.commands', e.g.
+ * https://discord.com/oauth2/authorize?client_id=940762342495518720&scope=bot+applications.commands&permissions=139586816064
+ */
+
+
+
+auto bankCleanse(std::string dump) {
+
+    //TODO - Store somewhere
+    const std::set<std::string> keepSet = {
+        // Enchanting Mats.
+        "Abyss Crystal",
+        "Dream Shard",
+        "Greater Cosmic Essence",
+        "Infinite Dust",
+        // Fish Feasts and its mats.
+        "Fish Feast",
+        "Nettlefish",
+        "Musselback Sculpin",
+        "Glacial Salmon",
+        "Northern Spices",
+        // Gems
+        "Autumn's Glow",
+        "Monarch Topaz",
+        "Forest Emerald",
+        "Scarlet Ruby",
+        "Sky Sapphire",
+        "Twilight Opal",
+        // Power Crystals
+        "Red Power Crystal",
+        "Blue Power Crystal"
+    };
+
+
+
+    std::string line;
+    std::vector<std::string> myLines;
+    std::ifstream myfile(dump);
+    while (std::getline(myfile, line)) {
+        myLines.push_back(line);
+    }
+    std::cout << myLines[0];
+    myLines.pop_back(); // Removes blank space at the end.
+
+    std::string gold = myLines[2];
+    gold = gold.substr(23, 5);
+    // Removes all lines beginning with { or }.
+    std::vector<std::string> ree = {};
+    for (int i = 4; i < myLines.size(); i++) {
+        if (myLines[i][1] != '{' && myLines[i][1] != '}') {
+            ree.push_back(myLines[i]);
+        }
+    }
+
+    // Removes all lines that contains "No Item".
+    std::vector<std::string> ree2 = {};
+    for (int i = 0; i < ree.size(); i++) {
+        if (ree[i].find("No Item") != std::string::npos) {
+            continue;
+        }
+        ree2.push_back(ree[i]);
+    }
+
+    // Removes the tabs of all of it (move up TODO)
+    for (int i = 0; i < ree2.size(); i++) {
+        ree2[i].erase(std::remove(ree2[i].begin(), ree2[i].end(), '\t'), ree2[i].end()); // Removes the tabs
+    }
+
+    // Iterates over vector and collects the names of the items and then the count.
+    std::vector<std::string> ree4 = {};
+    for (int i = 0; i < ree2.size(); i++) {
+        if (i % 2 == 0) {
+            std::string str2 = ree2[i].substr(ree2[i].find("[") + 1);
+            std::size_t posSecond = str2.find("]");
+            std::string mystr = str2.substr(0, str2.find("]", 0));
+            ree4.push_back(mystr);
+        }
+        else {
+            std::string mystr = ree2[i].substr(0, ree2[i].find(",", 0));
+            ree4.push_back(mystr);
+        }
+    }
+
+    // Creates a Map of all items and their combined counts.
+    std::map<std::string, int> my_map = {};
+    for (int i = 0; i < ree4.size(); i += 2) {
+        if (!my_map[ree4[i]]) {
+            my_map[ree4[i]] = stoi(ree4[i + 1]);
+        }
+        else {
+            my_map[ree4[i]] = my_map[ree4[i]] + stoi(ree4[i + 1]);
+        }
+    }
+    // Checks against existing list of items we want to keep.
+    std::vector<std::string> thingsToRemove = {};  
+    for (auto items : my_map) {
+        if (keepSet.contains(items.first) == false) {
+            thingsToRemove.push_back(items.first);
+        }
+    }
+    // Removes the items we don't want from the map.
+    for (auto remove : thingsToRemove) {
+        my_map.erase(remove);
+    }
+    // Converts the int values to strings.
+    std::map<std::string, std::string> my_map_2 = {};
+    for (auto item : my_map) {
+        my_map_2[item.first] = std::to_string(item.second);
+    }
+
+    json jsonthing = { my_map_2 };
+    json jsonthing2 = jsonthing[0];
+
+    struct returnedMaps {
+        json a;
+        std::map<std::string, int> b;
+        std::string c;
+
+    };
+
+    return returnedMaps{ jsonthing2, my_map, gold };
+}
+
+int main()
+{
+    const std::set<std::string> enchantingSet = {
+        // Enchanting Mats.
+        "Abyss Crystal",
+        "Dream Shard",
+        "Greater Cosmic Essence",
+        "Infinite Dust"
+    };
+    const std::set<std::string> fishFeastSet = {
+        // Enchanting Mats.
+        "Fish Feast",
+        "Nettlefish",
+        "Musselback Sculpin",
+        "Glacial Salmon",
+        "Northern Spices"
+    };
+    const std::set<std::string> gemsSet = {
+        // Enchanting Mats.
+        "Autumn's Glow",
+        "Monarch Topaz",
+        "Forest Emerald",
+        "Scarlet Ruby",
+        "Sky Sapphire",
+        "Twilight Opal"
+    };
+    std::map<std::string, int> gemMap = {
+        {"Autumn's Glow", 10},
+        {"Monarch Topaz", 10 },
+        {"Forest Emerald", 10},
+        {"Scarlet Ruby", 10},
+        {"Sky Sapphire", 10},
+        {"Twilight Opal", 10}
+
+    };
+    const std::set<std::string> crystalsSet = {
+        // Enchanting Mats.
+        "Red Power Crystal",
+        "Blue Power Crystal"
+    };
+
+    std::string botToken;
+    std::ifstream myBotToken("token.txt");
+    if (myBotToken.is_open()) {
+        myBotToken >> botToken;
+    }
+
+    std::string guildToken;
+    std::ifstream myGuildToken("snowflake.txt");
+    if (myGuildToken.is_open()) {
+        myGuildToken >> guildToken;
+    }
+
+    //auto [newBankThing, fullGuildBankMap]  = bankCleanse("C:\\Users\\Chris\\Desktop\\bankDump.txt");
+    auto [newBankThing, fullGuildBankMap, gold] = bankCleanse("C:\\Program Files (x86)\\World of Warcraft\\_classic_\\WTF\\Account\\ANGELITEWEAPON\\Pyrewood Village\\Naelo\\SavedVariables\\ChronkzBankAddon.lua");
+
+    uint64_t intents = dpp::i_default_intents | dpp::i_message_content;
+    dpp::cluster bot(botToken, intents);
+
+    bot.on_log(dpp::utility::cout_logger());
+
+    bot.on_message_create([&bot, newBankThing, enchantingSet, fishFeastSet, gemsSet, gemMap, crystalsSet, gold](const dpp::message_create_t& event) {
+        if (event.msg.content == "!bank") {
+
+            //dpp::embed embed0 = dpp::embed().set_color(dpp::colors::gray).set_thumbnail("https://wow.zamimg.com/images/wow/icons/large/inv_enchant_abysscrystal.jpg");
+            //embed0.set_title(fmt::format("-----------------Gold Amount: {}-----------------", gold));
+            dpp::embed embed = dpp::embed().set_color(dpp::colors::gray).set_thumbnail("https://wow.zamimg.com/images/wow/icons/large/inv_enchant_abysscrystal.jpg");
+            embed.set_title("-----------------Enchanting Mats-----------------");
+            dpp::embed embed2 = dpp::embed().set_color(dpp::colors::gray).set_thumbnail("https://wow.zamimg.com/images/wow/icons/large/inv_misc_fish_52.jpg");
+            embed2.set_title("-----------------Fish Feast Mats-----------------");
+            dpp::embed embed3 = dpp::embed().set_color(dpp::colors::gray).set_thumbnail("https://wow.zamimg.com/images/wow/icons/large/inv_jewelcrafting_gem_04.jpg");
+            embed3.set_title("-------------------Gem Mats---------------------");
+            dpp::embed embed4 = dpp::embed().set_color(dpp::colors::gray).set_thumbnail("https://wow.zamimg.com/images/wow/icons/large/inv_misc_gem_sapphire_03.jpg");
+            embed4.set_title("------------------Crystal Mats-------------------");
+            embed3.set_footer(gold, "https://wow.zamimg.com/images/wow/icons/large/inv_misc_coin_02.jpg");
+
+            for (auto it = newBankThing.begin(); it != newBankThing.end(); ++it) {
+                if (enchantingSet.contains(it.key()) == true) {
+                    std::string formattedValue = fmt::format("```ansi\n\u001b[0;32m{}\n```", static_cast<std::string>(it.value()));
+                    embed.add_field(it.key(), formattedValue, true);
+                }
+                else if(fishFeastSet.contains(it.key()) == true) {
+                    std::string formattedValue = fmt::format("```ansi\n\u001b[0;32m{}\n```", static_cast<std::string>(it.value()));
+                    embed2.add_field(it.key(), formattedValue, true);
+                }
+                else if (gemsSet.contains(it.key()) == true) {
+                    int colour = 32;
+                    if (it.key() == "Scarlet Ruby") {
+                        colour = 31;
+                    }
+                    std::string formattedValue = fmt::format("```ansi\n\u001b[0;{}m{}\n```", colour, static_cast<std::string>(it.value()));
+                    embed3.add_field(it.key(), formattedValue, true);
+                }
+            }
+            embed3.set_timestamp(time(0));
+            //embed3.set_footer(dpp::embed_footer().set_text("RANJEET'S MIM HEAD COUNT: 0"));
+            //embed3.set_image("https://wow.zamimg.com/images/wow/icons/large/spell_misc_emotionsad.jpg");
+
+            //dpp::message msg0(event.msg.channel_id, embed0);
+            dpp::message msg(event.msg.channel_id, embed);
+            dpp::message msg2(event.msg.channel_id, embed2);
+            dpp::message msg3(event.msg.channel_id, embed3);
+
+            //bot.message_create(msg0);
+            bot.message_create(msg);
+            bot.message_create(msg2);
+            bot.message_create(msg3);
+
+        }
+        });
+
+    bot.on_ready([&bot, guildToken](const dpp::ready_t& event) {
+        if (dpp::run_once<struct register_bot_commands>()) {
+            bot.guild_command_create(dpp::slashcommand("test", "Test!", bot.me.id), guildToken);
+        }
+        });
+
+    bot.start(dpp::st_wait);
+
+    return 0;
+}
